@@ -1,7 +1,10 @@
+import { ChromaClient, OpenAIEmbeddingFunction } from 'chromadb'
 import invariant from 'tiny-invariant'
-import { ChromaClient, Collection, OpenAIEmbeddingFunction } from 'chromadb'
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
+
 invariant(
   OPENAI_API_KEY,
   'OPENAI_API_KEY environment variable is missing from .env',

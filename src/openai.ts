@@ -1,10 +1,10 @@
-import invariant from 'tiny-invariant'
+import * as dotenv from 'dotenv'
 import {
   Configuration,
   OpenAIApi,
   type ChatCompletionRequestMessage,
 } from 'openai'
-import * as dotenv from 'dotenv'
+import invariant from 'tiny-invariant'
 dotenv.config()
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
