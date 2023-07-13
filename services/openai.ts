@@ -19,11 +19,15 @@ const configuration = new Configuration({
 })
 const openai = new OpenAIApi(configuration)
 
-export const openai_completion = async (
-  prompt: string,
+export const openai_completion = async ({
+  prompt,
   temperature = 0.5,
   maxTokens = 100,
-) => {
+}: {
+  prompt: string
+  temperature?: number
+  maxTokens?: number
+}) => {
   const messages = [
     { role: 'system', content: prompt },
   ] satisfies ChatCompletionRequestMessage[]
