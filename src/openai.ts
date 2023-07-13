@@ -15,6 +15,7 @@ export const OPENAI_API_MODEL = process.env.OPENAI_API_MODEL || 'gpt-3.5-turbo'
 // Configure OpenAI
 const configuration = new Configuration({
   apiKey: OPENAI_API_KEY,
+  organization: process.env.OPENAI_API_ORGANIZATION_ID,
 })
 const openai = new OpenAIApi(configuration)
 
