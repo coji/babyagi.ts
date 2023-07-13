@@ -34,6 +34,5 @@ export const openai_completion = async (
     temperature: temperature,
     n: 1,
   })
-  console.log(messages)
   return response.data.choices[0].message?.content?.trim()
 }
