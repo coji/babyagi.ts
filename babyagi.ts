@@ -1,13 +1,12 @@
-import * as dotenv from 'dotenv'
-dotenv.config()
-import type { ChatCompletionRequestMessage } from 'openai'
-import type { Collection } from 'chromadb'
-import prompt from 'prompts'
-import invariant from 'tiny-invariant'
-import { setTimeout } from 'timers/promises'
-import { OPENAI_API_MODEL, openai_completion } from './src/openai.js'
-import { chromaConnect, embeddingFunction } from './src/chromadb.js'
 import chalk from 'chalk'
+import type { Collection } from 'chromadb'
+import * as dotenv from 'dotenv'
+import prompt from 'prompts'
+import { setTimeout } from 'timers/promises'
+import invariant from 'tiny-invariant'
+import { chromaConnect, embeddingFunction } from './src/chromadb.js'
+import { OPENAI_API_MODEL, openai_completion } from './src/openai.js'
+dotenv.config()
 
 // Table config
 const TABLE_NAME = process.env.TABLE_NAME || 'tasks'
@@ -53,12 +52,6 @@ const add_task = (task: Task) => {
 
 const clear_tasks = () => {
   taskList = []
-}
-
-const get_ada_embedding = async (text: string) => {
-  text = text.replace('\n', ' ')
-  const embedding = await embeddingFunction.generate([text])
-  return embedding
 }
 
 const task_creation_agent = async (
@@ -121,7 +114,7 @@ const execution_agent = async (
   task: string,
   chromaCollection: Collection,
 ) => {
-  const context = context_agent(objective, 5, chromaCollection)
+  const context = await context_agent(objective, 5, chromaCollection)
   const prompt = `
     You are an AI who performs one task based on the following objective: ${objective}.\n
     Take into account these previously completed tasks: ${context}.\n
