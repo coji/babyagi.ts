@@ -1,18 +1,11 @@
 {
-  "name": "babyagi",
+  "name": "babyagi.ts",
   "version": "1.0.0",
-  "description": "babyagi",
+  "description": "babyagi.ts",
   "main": "babyagi.js",
   "type": "module",
-  "author": {
-    "name": "Yohei Nakajima",
-    "url": "https://twitter.com/yoheinakajima"
-  },
   "scripts": {
-    "babyagi": "tsx babyagi",
-    "start": "npm run chroma-up && tsx babyagi",
-    "chroma-up": "docker-compose -f ./chroma/docker-compose.yml up -d --build",
-    "chroma-down": "docker-compose -f ./chroma/docker-compose.yml down"
+    "start": "tsx babyagi"
   },
   "keywords": [],
   "license": "ISC",
@@ -26,7 +19,7 @@
     "typescript": "^5.1.6"
   },
   "devDependencies": {
-    "@types/node": "^20.4.1",
+    "@types/node": "^20.4.2",
     "@types/prompts": "^2.4.4"
   },
   "prettier": {
