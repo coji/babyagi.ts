@@ -1,13 +1,22 @@
 import chalk from 'chalk'
 import { createTaskListService } from './task_list.js'
+import { createOpenAiService } from './openai.js'
 import { createAgentService } from './agent.js'
 import { setTimeout } from 'timers/promises'
 
-export const createAgentRunner = (objective: string, initialTask: string) => {
+export const createAgentRunner = (
+  objective: string,
+  initialTask: string,
+  openAiService: ReturnType<typeof createOpenAiService>,
+) => {
   const run = async () => {
     const taskListService = createTaskListService()
     taskListService.add_task(initialTask)
-    const agent = createAgentService({ objective, taskListService })
+
+    const agent = createAgentService({
+      objective,
+      context: { openAiService, taskListService },
+    })
 
     while (taskListService.taskList.length > 0) {
       console.log(chalk.magentaBright.bold('\n*****TASK LIST*****\n'))

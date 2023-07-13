@@ -3,38 +3,65 @@ import * as dotenv from 'dotenv'
 import prompt from 'prompts'
 import invariant from 'tiny-invariant'
 import { createAgentRunner } from './services/agent_runner.js'
-import { OPENAI_API_MODEL } from './services/openai.js'
+import { createOpenAiService } from './services/openai.js'
+import { cli } from 'cleye'
 dotenv.config()
 
-// Run config
-const BABY_NAME = process.env.BABY_NAME || 'BabyAGI'
+const possibleModels = ['gpt-3.5-turbo', 'gpt-4'] as const
+type Models = (typeof possibleModels)[number]
 
-// Goal config
-const { OBJECTIVE } = await prompt({
-  name: 'OBJECTIVE',
-  type: 'text',
-  message: "What is BabyAGI's objective?",
-})
-//const OBJECTIVE = p("What is BabyAGI's objective? ")
-const { INITIAL_TASK } = await prompt({
-  name: 'INITIAL_TASK',
-  type: 'text',
-  message: 'What is the initial task to complete the objective? ',
-})
-invariant(OBJECTIVE, 'No objective provided.')
-invariant(INITIAL_TASK, 'No initial task provided.')
-
-console.log(chalk.magentaBright.bold('\n*****CONFIGURATION*****\n'))
-console.log(`Name: ${BABY_NAME}`)
-console.log(`LLM: ${OPENAI_API_MODEL}`)
-
-console.log(chalk.blueBright.bold('\n*****OBJECTIVE*****\n'))
-console.log(`${OBJECTIVE}`)
-
-console.log(chalk.yellowBright.bold(`\nInitial task: ${INITIAL_TASK}`))
+function Model(model: Models) {
+  if (!possibleModels.includes(model)) {
+    throw new Error(`Invalid model: "${model}"`)
+  }
+  return model
+}
 
 const main = async () => {
-  const runner = createAgentRunner(OBJECTIVE, INITIAL_TASK)
+  invariant(process.env.OPENAI_API_KEY, 'No OpenAI API key provided.')
+
+  // モデルの設定
+  const argv = cli({
+    name: 'babyagi',
+    flags: {
+      model: {
+        type: Model,
+        description: 'OpenAI API Model',
+        default: 'gpt-3.5-turbo',
+      },
+    },
+  })
+  const model = argv.flags.model
+
+  const { objective } = await prompt({
+    name: 'objective',
+    type: 'text',
+    message: "What is BabyAGI's objective?",
+  })
+
+  const { initial_task } = await prompt({
+    name: 'initial_task',
+    type: 'text',
+    message: 'What is the initial task to complete the objective? ',
+  })
+  invariant(objective, 'No objective provided.')
+  invariant(initial_task, 'No initial task provided.')
+
+  console.log(chalk.magentaBright.bold('\n*****CONFIGURATION*****\n'))
+  console.log('OpenAI API Model:', model)
+
+  console.log(chalk.blueBright.bold('\n*****OBJECTIVE*****\n'))
+  console.log(`${objective}`)
+
+  console.log(chalk.yellowBright.bold(`\nInitial task: ${initial_task}\n`))
+
+  const openAiService = createOpenAiService({
+    apiKey: process.env.OPENAI_API_KEY,
+    organizationId: process.env.OPENAI_API_ORG,
+    model,
+  })
+
+  const runner = createAgentRunner(objective, initial_task, openAiService)
   await runner.run()
 }
 

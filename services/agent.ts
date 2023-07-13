@@ -1,13 +1,20 @@
-import { openai_completion } from './openai.js'
-import { type createTaskListService } from './task_list.js'
+import type { OpenAiServiceOptions, createOpenAiService } from './openai.js'
+import type { createTaskListService } from './task_list.js'
+
+interface AgentServiceContext {
+  taskListService: ReturnType<typeof createTaskListService>
+  openAiService: ReturnType<typeof createOpenAiService>
+}
 
 export const createAgentService = ({
   objective,
-  taskListService,
+  context,
 }: {
   objective: string
-  taskListService: ReturnType<typeof createTaskListService>
+  context: AgentServiceContext
 }) => {
+  const { taskListService, openAiService } = context
+
   const task_creation = async (
     result: string | undefined,
     task_description: string,
@@ -21,7 +28,7 @@ export const createAgentService = ({
           .join(', ')}. 
         Based on the result, create new tasks to be completed by the AI system that do not overlap with incomplete tasks. 
         Return the tasks as an array.`
-    const response = await openai_completion({ prompt })
+    const response = await openAiService.completion({ prompt })
     if (!response) {
       return
     }
@@ -40,7 +47,7 @@ export const createAgentService = ({
     #. First task
     #. Second task
     Start the task list with number ${nextTaskId}.`
-    const response = await openai_completion({ prompt })
+    const response = await openAiService.completion({ prompt })
     if (!response) {
       throw new Error('No response from OpenAI')
     }
@@ -63,7 +70,7 @@ export const createAgentService = ({
     You are an AI who performs one task based on the following objective: ${objective}.\n
     Take into account these previously completed tasks: ${context}.\n
     Your task: ${task}\nResponse:`
-    const response = await openai_completion({ prompt, maxTokens: 2000 })
+    const response = await openAiService.completion({ prompt, maxTokens: 2000 })
     return response
   }
 
