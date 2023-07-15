@@ -41,7 +41,10 @@ export const createOpenAiService = ({
       temperature: temperature,
       n: 1,
     })
-    return response.data.choices[0].message?.content?.trim()
+    if (response.data.choices[0].message?.content === undefined) {
+      throw new Error('No message returned from OpenAI')
+    }
+    return response.data.choices[0].message.content.trim()
   }
 
   return {

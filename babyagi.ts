@@ -1,10 +1,10 @@
 import chalk from 'chalk'
+import { cli } from 'cleye'
 import * as dotenv from 'dotenv'
 import prompt from 'prompts'
 import invariant from 'tiny-invariant'
 import { createAgentRunner } from './services/agent_runner.js'
 import { createOpenAiService } from './services/openai.js'
-import { cli } from 'cleye'
 dotenv.config()
 
 const possibleModels = ['gpt-3.5-turbo', 'gpt-4'] as const
@@ -38,13 +38,13 @@ const main = async () => {
     type: 'text',
     message: "What is BabyAGI's objective?",
   })
+  invariant(objective, 'No objective provided.')
 
   const { initial_task } = await prompt({
     name: 'initial_task',
     type: 'text',
     message: 'What is the initial task to complete the objective? ',
   })
-  invariant(objective, 'No objective provided.')
   invariant(initial_task, 'No initial task provided.')
 
   console.log(chalk.magentaBright.bold('\n*****CONFIGURATION*****\n'))
