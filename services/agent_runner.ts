@@ -41,7 +41,7 @@ export const createAgentRunner = (
       resultStorage.add(task, result)
 
       // Step 3: Create new tasks and re-prioritize task list
-      const newTasks = await agent.task_creation(objective, result)
+      const newTasks = await agent.task_creation(result, task.taskName)
       if (newTasks) {
         for (const t of newTasks) {
           taskListStorage.add(t)
