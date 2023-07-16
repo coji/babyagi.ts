@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv'
 import prompt from 'prompts'
 import invariant from 'tiny-invariant'
 import { createAgentRunner } from './services/agent_runner.js'
-import { createOpenAiService } from './services/openai.js'
+import { createOpenAiService } from './services/llm_openai.js'
 dotenv.config()
 
 const possibleModels = ['gpt-3.5-turbo', 'gpt-4'] as const

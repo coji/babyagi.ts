@@ -3,7 +3,7 @@ export interface Task {
   taskName: string
 }
 
-export const createTaskListService = () => {
+export const createTaskListStorageService = () => {
   let taskList: Task[] = []
   let taskIdCounter = 1
 

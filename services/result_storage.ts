@@ -1,4 +1,4 @@
-import type { Task } from './task_list.js'
+import type { Task } from './task_list_storage.js'
 
 export const createResultStorageService = () => {
   const results = new Map<Task['taskId'], { task: Task; result: string }>()

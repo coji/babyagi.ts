@@ -1,9 +1,11 @@
-import type { OpenAiServiceOptions, createOpenAiService } from './openai.js'
-import type { createTaskListService } from './task_list.js'
+import type { createOpenAiService } from './llm_openai.js'
+import type { createResultStorageService } from './result_storage.js'
+import type { createTaskListStorageService } from './task_list_storage.js'
 
 interface AgentServiceContext {
-  taskListService: ReturnType<typeof createTaskListService>
-  openAiService: ReturnType<typeof createOpenAiService>
+  taskListStorage: ReturnType<typeof createTaskListStorageService>
+  resultStorage: ReturnType<typeof createResultStorageService>
+  LLMService: ReturnType<typeof createOpenAiService>
 }
 
 export const createAgentService = ({
@@ -13,15 +15,16 @@ export const createAgentService = ({
   objective: string
   context: AgentServiceContext
 }) => {
-  const { taskListService, openAiService } = context
+  const { LLMService: openai, taskListStorage, resultStorage } = context
 
   const execution = async ({ task }: { task: string }) => {
     const context = await context_agent(objective, 5)
     const prompt = `
-Perform one task based on the following objective: ${objective}.\n
-Take into account these previously completed tasks: ${context}.\n
-Your task: ${task}\nResponse:`
-    const response = await openAiService.completion({ prompt, maxTokens: 2000 })
+Perform one task based on the following objective: ${objective}.
+Take into account these previously completed tasks: ${context}.
+Your task: ${task}
+Response:`
+    const response = await openai.completion({ prompt, maxTokens: 2000 })
     return response
   }
 
@@ -33,7 +36,7 @@ Your task: ${task}\nResponse:`
 You are to use the result from an execution agent to create new tasks with the following objective: ${objective}, 
 The last completed task has the result: ${result}. 
 This result was based on this task description: ${taskDescription}. 
-These are incomplete tasks: ${taskListService.taskList
+These are incomplete tasks: ${taskListStorage.taskList
       .map((task) => `${task.taskId}: ${task.taskName}`)
       .join(', ')}. 
 Based on the result, return a list of tasks to be completed in order to meet the objective. 
@@ -46,7 +49,7 @@ Return one task per line in your response. The result must be a numbered list in
 The number of each entry must be followed by a period. If your list is empty, write "There are no tasks to add at this time."
 Unless your list is empty, do not include any headers before your numbered list or follow your numbered list with any other output.
 `
-    const response = await openAiService.completion({ prompt })
+    const response = await openai.completion({ prompt })
     if (!response) {
       return
     }
@@ -57,8 +60,7 @@ Unless your list is empty, do not include any headers before your numbered list 
   }
 
   const prioritization = async (taskId: number) => {
-    const taskNames = taskListService.taskNames()
-    const nextTaskId = taskId + 1
+    const taskNames = taskListStorage.taskNames()
     const prompt = `
 You are tasked with prioritizing the following tasks:
 ${taskNames.join('\n')}
@@ -71,25 +73,24 @@ Do not remove any tasks. Return the ranked tasks as a numbered list in the forma
 
 The entries must be consecutively numbered, starting with 1. The number of each entry must be followed by a period.
 Do not include any headers before your ranked list or follow your list with any other output.`
-    const response = await openAiService.completion({ prompt })
+    const response = await openai.completion({ prompt })
     if (!response) {
       throw new Error('No response from OpenAI')
     }
     const newTasks = response.trim().includes('\n')
       ? response.trim().split('\n')
       : [response.trim()]
-    taskListService.clear()
     newTasks.forEach((newTask) => {
       const newTaskParts = newTask.trim().split(/\.(?=\s)/)
       if (newTaskParts.length == 2) {
         const newTaskName = newTaskParts[1].trim()
-        taskListService.add(newTaskName)
+        taskListStorage.add(newTaskName)
       }
     })
   }
 
-  const context_agent = async (query: any, topResultsNum: number) =>
-    taskListService.taskNames().slice(0, topResultsNum)
+  const context_agent = async (query: string, topResultsNum: number) =>
+    resultStorage.query(query, topResultsNum)
 
   return {
     task_creation,

@@ -1,6 +1,6 @@
 import chalk from 'chalk'
-import { createTaskListService } from './task_list.js'
-import { createOpenAiService } from './openai.js'
+import { createTaskListStorageService } from './task_list_storage.js'
+import { createOpenAiService } from './llm_openai.js'
 import { createAgentService } from './agent.js'
 import { setTimeout } from 'timers/promises'
 import { createResultStorageService } from './result_storage.js'
@@ -11,23 +11,23 @@ export const createAgentRunner = (
   openAiService: ReturnType<typeof createOpenAiService>,
 ) => {
   const run = async () => {
-    const taskListService = createTaskListService()
-    taskListService.add(initialTask)
+    const taskListStorage = createTaskListStorageService()
+    taskListStorage.add(initialTask)
     const resultStorage = createResultStorageService()
 
     const agent = createAgentService({
       objective,
-      context: { openAiService, taskListService },
+      context: { LLMService: openAiService, taskListStorage, resultStorage },
     })
 
-    while (taskListService.length() > 0) {
+    while (taskListStorage.length() > 0) {
       console.log(chalk.magentaBright.bold('\n*****TASK LIST*****\n'))
-      taskListService.taskNames().forEach((taskName) => {
+      taskListStorage.taskNames().forEach((taskName) => {
         console.log(' • ' + taskName)
       })
 
       // Step 1: Pull the first task
-      const task = taskListService.pull()
+      const task = taskListStorage.pull()
       if (!task) {
         return
       }
@@ -44,7 +44,7 @@ export const createAgentRunner = (
       const newTasks = await agent.task_creation(objective, result)
       if (newTasks) {
         for (const t of newTasks) {
-          taskListService.add(t)
+          taskListStorage.add(t)
         }
       }
       await agent.prioritization(task.taskId)
